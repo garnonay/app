@@ -4,9 +4,9 @@ from audio_recorder_streamlit import audio_recorder
 from tempfile import NamedTemporaryFile
 
 
-col,col1 = st.columns([3,8])
+col,col1 = st.columns([1,8])
 with col1:
-    st.title("Transcripcción instantánea")
+    st.title("Transcripción instantánea")
 st.write('¿Cómo quieres interactuar con la IA?')
 
 with st.expander("Micrófono"):
