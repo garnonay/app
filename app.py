@@ -6,17 +6,17 @@ from tempfile import NamedTemporaryFile
 
 col,col1 = st.columns([3,8])
 with col1:
-    st.title("Chat inteligente")
+    st.title("Transcripcción instantánea")
 st.write('¿Cómo quieres interactuar con la IA?')
 
-with st.expander("Con tu voz"):
+with st.expander("Micrófono"):
     recording = audio_recorder()
     if recording:
         st.audio(recording, format="audio/wav")
         temp_file = NamedTemporaryFile().name
         with open(temp_file, mode='bw') as f:
             f.write(recording)
-        model = whisper.load_model("base")
+        model = whisper.load_model("medium")
         #result = model.transcribe("myfile.wav", task='translate')
         result = model.transcribe(temp_file, language='es')
         st.write('Has dicho: ' + result['text'])
