@@ -9,6 +9,11 @@ with col1:
     st.title("Transcripción instantánea")
 st.write('¿Cómo quieres interactuar con la IA?')
 
+@st.cache
+def getmodel():
+    model = whisper.load_model("small")
+    return model
+
 with st.expander("Micrófono"):
     recording = audio_recorder()
     if recording:
@@ -16,8 +21,8 @@ with st.expander("Micrófono"):
         temp_file = NamedTemporaryFile().name
         with open(temp_file, mode='bw') as f:
             f.write(recording)
-        model = whisper.load_model("medium")
         #result = model.transcribe("myfile.wav", task='translate')
+        model = getmodel()
         result = model.transcribe(temp_file, language='es')
         st.write('Has dicho: ' + result['text'])
 
@@ -30,7 +35,7 @@ with st.expander("Subiendo un fichero"):
         temp_file1 = NamedTemporaryFile().name
         with open(temp_file1, mode='bw') as f:
             f.write(recording)
-        model = whisper.load_model("base")
         #result = model.transcribe("myfile.wav", task='translate')
+        model = getmodel()
         result = model.transcribe(temp_file1)
         st.write('El audio dice: ' + result['text'])
