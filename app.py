@@ -17,7 +17,7 @@ with st.expander("Micrófono"):
             f.write(recording)
         #result = model.transcribe("myfile.wav", task='translate')
         model = whisper.load_model("base")
-        result = model.transcribe(temp_file, language='es')
+        result = model.transcribe(temp_file, language='es', fp16=False)
         st.write('Has dicho: ' + result['text'])
 
 with st.expander("Subiendo un fichero"):
@@ -31,5 +31,5 @@ with st.expander("Subiendo un fichero"):
             f.write(recording)
         #result = model.transcribe("myfile.wav", task='translate')
         model = whisper.load_model("small")
-        result = model.transcribe(temp_file1)
+        result = model.transcribe(temp_file1, fp16=False)
         st.write('El audio dice: ' + result['text'])
