@@ -3,7 +3,6 @@ import whisper
 from audio_recorder_streamlit import audio_recorder
 from tempfile import NamedTemporaryFile
 
-
 col,col1 = st.columns([1,8])
 with col1:
     st.title("Transcripción instantánea")
@@ -17,7 +16,7 @@ with st.expander("Micrófono"):
         with open(temp_file, mode='bw') as f:
             f.write(recording)
         #result = model.transcribe("myfile.wav", task='translate')
-        model = whisper.load_model("small")
+        model = whisper.load_model("base")
         result = model.transcribe(temp_file, language='es')
         st.write('Has dicho: ' + result['text'])
 
