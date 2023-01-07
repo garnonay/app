@@ -3,7 +3,9 @@ import whisper
 from audio_recorder_streamlit import audio_recorder
 from tempfile import NamedTemporaryFile
 import pytube
-import tempfile
+import re
+# from transformers import pipeline
+
 
 col,col1 = st.columns([1,8])
 with col1:
@@ -20,52 +22,119 @@ with col1:
     unsafe_allow_html=True
     )
 
-st.write('Please choose one of the following options')
-
-
 @st.cache(show_spinner=False)
 def load_whisper_model():
     model = whisper.load_model('tiny')
     return model
 
+def valid_url(url):
+ return re.search(r'((http(s)?:\/\/)?)(www\.)?((youtube\.com\/)|(youtu.be\/))[\S]+', url)
 
-with st.expander("Microphone"):
+# @st.cache(show_spinner=False)
+# def summarymodel():
+#     summarizer = pipeline("summarization", model="t5-base")
+#     return summarizer
+
+# def summarize(text):
+#   b = summarizer(text)
+#   b = b[0]['summary_text']
+#   return b
+
+option = st.sidebar.selectbox('Options', ['Please choose one', 'Microphone', 'Audio file', 'Youtube Video'])
+if option == 'Microphone':
+    st.write('')
+    st.write('')
     recording = audio_recorder()
     if recording:
+        st.markdown("## 🔊 Audio")
         st.audio(recording, format="audio/wav")
         temp_file = NamedTemporaryFile().name
         with open(temp_file, mode='wb') as f:
             f.write(recording)
+        st.markdown("## 📄 Transcription")
         #result = model.transcribe("myfile.wav", task='translate')
-        model =  load_whisper_model()
-        result = model.transcribe(temp_file, fp16=False)
-        st.write('Audio: ' + result['text'])
-
-with st.expander("Uploading an Audio file"):
-    audio_file = st.file_uploader('Upload the file')
+        with st.spinner("Transcribing audio..."):
+            result = None
+            try:
+                model = load_whisper_model()
+                result = model.transcribe(temp_file, fp16=False)
+                st.write(result['text'])
+            except RuntimeError:
+                result = None
+                st.warning(
+                    """
+                    Oops! Something went wrong. Please try again in a few seconds.
+                    """
+                )
+elif option == 'Audio file':
+    st.write('')
+    st.write('')
+    audio_file = st.file_uploader('Upload the file',type=['mp3', 'wav', 'aac', 'flac', 'm4a'])
     if audio_file:
         if audio_file is not None:
+            st.markdown("## 🔊 Audio")
             recording = audio_file.read()
-        st.audio(recording, format="audio/wav")
-        temp_file1 = NamedTemporaryFile().name
-        with open(temp_file1, mode='wb') as f:
-            f.write(recording)
-        #result = model.transcribe("myfile.wav", task='translate')
-        model =  load_whisper_model()
-        result = model.transcribe(temp_file1, fp16=False)
-        st.write('Audio: ' + result['text'])
+            st.audio(recording, format="audio/wav")
+            temp_file1 = NamedTemporaryFile().name
+            with open(temp_file1, mode='wb') as f:
+                f.write(recording)
+            st.markdown("## 📄 Transcription")
+            #result = model.transcribe("myfile.wav", task='translate')
+            with st.spinner("Transcribing audio..."):
+                result = None
+                try:
+                    model = load_whisper_model()
+                    result = model.transcribe(temp_file1, fp16=False)
+                    st.write(result['text'])
+                except RuntimeError:
+                    result = None
+                    st.warning(
+                        """
+                        Oops! Something went wrong. Please try again in a few seconds.
+                        """
+                    )
+elif option == 'Youtube Video':
+    st.write('')
+    st.write('')
+    url = st.text_input('Video URL')
+    if url:
+        right_url = valid_url(url)
+        if right_url:
+            st.markdown("## 🔊 Audio")
+            data = pytube.YouTube(url)
+            temp_file2 = NamedTemporaryFile().name
+            audio_stream = data.streams.filter(only_audio=True).first()
+            ytrecording = audio_stream.download(filename=temp_file2)
+            st.audio(ytrecording, format="audio/wav")
+            st.markdown("## 📄 Transcription")
+            with st.spinner("Transcribing audio..."):
+                result = None
+                try:
+                    model = load_whisper_model()
+                    result = model.transcribe(ytrecording, fp16=False)
+                    st.write(result['text'])
+                except RuntimeError:
+                    result = None
+                    st.warning(
+                        """
+                        Oops! Something went wrong. Please try again in a few seconds.
+                        """
+                    )
+            # if st.button('Summarize it please!'):
+            #     model = summarymodel()
+            #     summary = summarize(result['text'])
+            #     st.write('Summary: ' + summary)
+        else:
+            st.warning("Invalid YouTube URL")
 
-
-with st.expander("Audio from a Youtube Video"):
-    video = st.text_input('Video URL')
-    if video:
-        if video is not None:
-            data = pytube.YouTube(video)
-        temp_file2 = NamedTemporaryFile().name
-        audio_stream = data.streams.filter(only_audio=True).first()
-        ytrecording = audio_stream.download(filename=temp_file2)
-        st.audio(ytrecording, format="audio/wav")
-        #result = model.transcribe("myfile.wav", task='translate')
-        model =  load_whisper_model()
-        result = model.transcribe(ytrecording, fp16=False)
-        st.write('Audio: ' + result['text'])
+else:
+    st.write('')
+    st.write('')
+    st.markdown(
+        """
+        This Streamlit app lets you transcribe YouTube videos using 
+        [Whisper](https://github.com/openai/whisper), 
+        a general-purpose speech recognition model developed by 
+        [OpenAI](https://openai.com/).
+        """
+    )
