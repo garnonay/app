@@ -24,7 +24,7 @@ with col1:
 
 @st.cache(show_spinner=False)
 def load_whisper_model():
-    model = whisper.load_model('tiny')
+    model = whisper.load_model('base')
     return model
 
 def valid_url(url):
